@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <title>BELAJAR UKOM</title>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="header">
+  <div class="title">BELAJAR UKOM ILMU GIZI</div>
+
+  <div class="user-info">
+    <span>Nama: <b id="user"></b></span>
+    <button onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="main">
+    <div id="quiz"></div>
+
+    <div class="actions">
+      <button onclick="prevQuestion()"><< Sebelumnya</button>
+      <button onclick="toggleFlag()">Ragu-Ragu</button>
+      <button onclick="nextQuestion()">Berikutnya >></button>
+      <button class="submit" onclick="submitQuiz()">Kirim Jawaban</button>
+    </div>
+  </div>
+
+  <div id="sidebar" class="sidebar">
+    <div id="timer" class="timer"></div>
+
+  <div id="progressContainer">
+    <div id="progressBar"></div>
+  </div>
+
+  <div id="progressText"></div>
+    
+    <h4>Navigasi Soal</h4>
+    <div id="nav"></div>
+
+    <div class="legend">
+      <p><span class="answered"></span> Sudah dijawab</p>
+      <p><span class="unanswered"></span> Belum dijawab</p>
+      <p><span class="flagged"></span> Ragu-ragu</p>
+    </div>
+  </div>
+
+</div>
+
+
+<script src="questions.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAOKU5BpwEK-AtC4nvNWBCChFeNQHLfSbs",
+    authDomain: "cbt-ukom-app.firebaseapp.com",
+    databaseURL: "https://cbt-ukom-app-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "cbt-ukom-app",
+    storageBucket: "cbt-ukom-app.firebasestorage.app",
+    messagingSenderId: "523540415199",
+    appId: "1:523540415199:web:e114d977b5869bf1cb5f6a"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+</script>
+<script src="app.js"></script>
+
+</body>
+</html>

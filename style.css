@@ -1,0 +1,368 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #f0f2f5;
+}
+
+.header {
+  background: #2c4f7b;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 20px;
+}
+
+.container {
+  display: flex;
+}
+
+.main {
+  width: calc(100% - 300px); /* ✅ sisakan ruang sidebar */
+  max-width: 900px; /* batasi lebar soal */
+  margin-right: 320px; /* konten tidak tertutup sidebar */
+  padding: 20px;
+}
+
+
+.sidebar {
+  width: 300px;
+  padding: 20px;
+  background: #e9ecef;
+
+  position: fixed;
+  right: 0;
+  top: 70px;
+
+  height: calc(100vh - 70px); /* ✅ tinggi layar */
+  overflow-y: auto;           /* ✅ scroll muncul */
+}
+
+
+.actions {
+  margin-top: 15px;
+}
+
+#quiz {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.actions button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.actions button:hover {
+  opacity: 0.8;
+}
+
+button.submit {
+  background: red;
+  color: white;
+}
+
+button:nth-child(1),
+button:nth-child(2),
+button:nth-child(3) {
+  background: #ddd;
+}
+.submit {
+  background: red;
+  color: white;
+}
+
+.sidebar {
+  width: 300px;
+  padding: 20px;
+  background: #e9ecef;
+}
+
+.timer {
+  background: red;
+  color: white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  padding: 12px;
+  text-align: center;
+  font-size: 18px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+
+  position: sticky;  /* ✅ INI KUNCI */
+  top: 0;            /* ✅ jarak dari atas sidebar */
+  z-index: 10;       /* ✅ supaya di atas elemen lain */
+
+}
+
+#sidebar h4 {
+  position: sticky;
+  top: 50px;
+  background: #e9ecef;
+  padding: 10px 0;
+  z-index: 5;
+  border-bottom: 1px solid #ccc;
+}
+ 
+#nav {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 5px;
+}
+
+#nav button {
+  width: 35px;
+  height: 35px;
+  border-radius: 5px;
+  border: none;
+  transition: 0.15s ease;
+}
+
+#nav button:focus {
+  outline: 2px solid blue;
+}
+
+.sidebar {
+  box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+}
+
+.answered {
+  background: green;
+}
+
+.unanswered {
+  background: #999;
+}
+
+.flagged {
+  background: orange;
+}
+
+.legend span {
+  width: 15px;
+  height: 15px;
+  display: inline-block;
+  margin-right: 5px;
+  border: 1px solid #333;
+}
+
+.answered {
+  background: green;
+}
+
+.unanswered {
+  background: gray;
+}
+
+.flagged {
+  background: orange;
+}
+
+#nav button:hover {
+  transform: scale(1.1);
+  cursor: pointer;
+}
+
+#nav button:active {
+  transform: scale(0.95);
+}
+
+#nav .active {
+  border: 2px solid blue;
+  transform: scale(1.2);
+  box-shadow: 0 0 5px blue;
+}
+
+.review-box {
+  background: white;
+  padding: 15px;
+  margin: 15px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.review-box h4 {
+  margin-bottom: 10px;
+}
+
+.opsi {
+  padding: 8px;
+  margin: 5px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.pembahasan {
+  margin-top: 10px;
+  background: #f9f9f9;
+  padding: 10px;
+  border-left: 5px solid blue;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  background: white;
+}
+
+th {
+  background: #2c4f7b;
+  color: white;
+}
+
+td, th {
+  text-align: center;
+}
+
+.header {
+  background: #2c4f7b;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 20px;
+  align-items: center;
+}
+
+.user-info span {
+  margin-right: 10px;
+}
+
+#progressContainer {
+  width: 100%;
+  height: 12px;
+  background: #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+#progressBar {
+  height: 100%;
+  width: 0%;
+  background: green;
+  transition: all 0.3s ease;
+}
+
+#progressText {
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.rank1 {
+  background: gold;
+  font-weight: bold;
+}
+
+.rank2 {
+  background: silver;
+  font-weight: bold;
+}
+
+.rank3 {
+  background: #cd7f32; /* bronze */
+  font-weight: bold;
+}
+
+tr:hover {
+  background: #f1f1f1;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+th {
+  background: #2c4f7b;
+  color: white;
+}
+
+td, th {
+  padding: 10px;
+  text-align: center;
+}
+
+tr {
+  transition: 0.3s;
+}
+
+.rank1 {
+  box-shadow: 0 0 10px gold;
+}
+
+.hasil-keterangan {
+  text-align: center;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.myRank {
+  outline: 3px solid blue;
+  background: #d0ebff;
+}
+
+@media (max-width: 768px) {
+  
+  /* ✅ layout jadi vertikal */
+  .container {
+    flex-direction: column;
+  }
+
+  /* ✅ main full */
+  .main {
+    width: 100%;
+    margin-right: 0;
+  }
+
+  /* ✅ sidebar pindah ke bawah */
+  .sidebar {
+    position: relative;
+    width: 100%;
+    top: 0;
+    height: auto;
+  }
+
+}
+
+@media (max-width: 768px) {
+  #nav {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  #quiz {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .user-info {
+    margin-top: 5px;
+  }
+}
+
+@media (max-width: 768px) {
+  .actions button {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+}
+
+@media (max-width: 768px) {
+  .timer {
+    font-size: 16px;
+  }
+}
+
+button {
+  touch-action: manipulation;
+}
