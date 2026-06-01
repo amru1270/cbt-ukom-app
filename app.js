@@ -1,26 +1,77 @@
+
+// ====== GLOBAL =======
+let halamanHasil = "";
+
+
+// ===== START APP =====
 window.addEventListener("DOMContentLoaded", function () {
 
   firebase.auth().onAuthStateChanged(user => {
     if (!user) {
       window.location.href = "login.html";
-    } else {
-      document.getElementById("user").innerText = user.email;
-      displayQuestion();
-      startTimer();
+      return;
     }
+
+    // ✅ ambil hasil per user
+    let savedHasil = localStorage.getItem("halamanHasil_" + user.uid);
+
+    // ✅ tampilkan hasil jika ada
+    if (savedHasil) {
+      halamanHasil = savedHasil;
+      document.body.innerHTML = halamanHasil;
+      return; // 🔥 INI KUNCI
+    }
+
+    // ✅ proteksi keluar
+    window.onbeforeunload = function () {
+      if (!window.submitted) {
+        return "Data ujian Anda belum selesai!";
+      }
+    };
+
+    // ✅ tampilkan user
+    let userEl = document.getElementById("user");
+    if (userEl) {
+      userEl.innerText = user.email;
+    }
+
+    // ✅ hanya jalan kalau tidak ada hasil
+    displayQuestion();
+    startTimer();
+
   });
 
 });
 
-// tampilkan nama
-firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    document.getElementById("user").innerText = user.email;
-  }
-});
-let questionsUjian = getRandomQuestions(questions, 180);
+
+// ===== INISIALISASI =====
+let savedQuestions = JSON.parse(localStorage.getItem("soalUjian"));
+
+let questionsUjian;
+
+if (savedQuestions && savedQuestions.length === 180) {
+  questionsUjian = savedQuestions;
+} else {
+  questionsUjian = getRandomQuestions(questions, 180);
+
+  // ✅ simpan soal
+  localStorage.setItem("soalUjian", JSON.stringify(questionsUjian));
+}
 let currentQuestion = 0;
+let savedIndex = localStorage.getItem("currentQuestion");
+
+if (savedIndex !== null) {
+  currentQuestion = parseInt(savedIndex);
+}
+
 let userAnswers = new Array(questionsUjian.length).fill(null);
+
+// ✅ LOAD DARI localStorage (GLOBAL)
+let saved = JSON.parse(localStorage.getItem("jawaban"));
+if (saved && saved.length === questionsUjian.length) {
+  userAnswers = saved;
+}
+
 let flagged = new Array(questionsUjian.length).fill(false);
 
 let timeLeft = 10800; // 180 menit
@@ -82,6 +133,10 @@ function renderSidebar() {
     btn.onclick = () => {
       saveAnswer();
       currentQuestion = i;
+
+      // ✅ simpan posisi
+      localStorage.setItem("currentQuestion", currentQuestion);
+
       displayQuestion();
     };
 
@@ -98,7 +153,6 @@ function displayQuestion() {
   scrollToActive();
 
   let q = questionsUjian[currentQuestion];
-  console.log(q);
 
   let quizDiv = document.getElementById("quiz");
 
@@ -132,6 +186,7 @@ function displayQuestion() {
 function saveAnswer() {
   let selected = document.querySelector('input[name="answer"]:checked');
   if (selected) userAnswers[currentQuestion] = selected.value;
+  localStorage.setItem("jawaban", JSON.stringify(userAnswers));
   updateProgress();
 }
 
@@ -140,6 +195,10 @@ function nextQuestion() {
   saveAnswer();
   if (currentQuestion < questionsUjian.length - 1) {
     currentQuestion++;
+
+    // ✅ simpan posisi
+    localStorage.setItem("currentQuestion", currentQuestion);
+
     displayQuestion();
   }
 }
@@ -148,6 +207,10 @@ function prevQuestion() {
   saveAnswer();
   if (currentQuestion > 0) {
     currentQuestion--;
+
+    // ✅ simpan posisi
+    localStorage.setItem("currentQuestion", currentQuestion);
+
     displayQuestion();
   }
 }
@@ -211,23 +274,52 @@ function renderNav() {
 
 // ================= SUBMIT =================
 function submitQuiz() {
+
+  // ✅ KONFIRMASI
+
+  let belum = userAnswers.filter(a => a === null).length;
+
+  let pesan = "Apakah Anda yakin ingin mengakhiri ujian?";
+
+  if (belum > 0) {
+    pesan += `\nMasih ada ${belum} soal yang belum dijawab!`;
+  }
+
+  let yakin = confirm("Apakah Anda yakin ingin mengakhiri ujian?\nPastikan semua jawaban sudah terisi.");
+
+  if (!yakin) {
+    return; // ✅ batal submit
+  }
+
   clearInterval(timer);
 
+  window.submitted = true;
+  window.onbeforeunload = null;
+  localStorage.setItem("jawabanReview", JSON.stringify(userAnswers));
+  localStorage.setItem("soalReview",JSON.stringify(questionsUjian));
+
   let score = 0;
+
+  // ✅ hitung skor
+  questionsUjian.forEach((q, i) => {
+    if (userAnswers[i] === q.jawaban) score++;
+  });
+
   let persen = Math.round((score / questionsUjian.length) * 100);
+
   let keterangan = "";
 
   if (persen < 55) {
-     keterangan = "❌ TERUS BERLATIH";
+    keterangan = "❌ TERUS BERLATIH";
   } else if (persen < 70) {
-     keterangan = "💪 SEMANGAT";
+    keterangan = "💪 SEMANGAT";
   } else if (persen < 80) {
-     keterangan = "👍 BAGUS";
+    keterangan = "👍 BAGUS";
   } else if (persen < 90) {
     keterangan = "🔥 SUPER";
   } else {
     keterangan = "🏆 LUAR BIASA";
-}
+  }
 
   let warna = "black";
 
@@ -237,69 +329,108 @@ function submitQuiz() {
   else if (persen < 90) warna = "purple";
   else warna = "green";
 
-  questionsUjian.forEach((q, i) => {
-    if (userAnswers[i] === q.jawaban) score++;
-  });
-
   let user = firebase.auth().currentUser;
-  firebase.database().ref("hasilUjian").push({
-  email: user.email,
-  skor: score,
-  total: questionsUjian.length,
-  waktu: new Date().toLocaleString()
-});
   
-  // ✅ tampil halaman hasil
-  document.body.innerHTML = `
-    <h1>Hasil Ujian</h1>
-    <p>Email: ${firebase.auth().currentUser.email}</p>
-    <h2>Skor: ${score} / ${questionsUjian.length} (${persen}%)</h2>
-    <h3 style="color:${warna}">${keterangan}</h3>
 
-    <button onclick="reviewSoal()">Lihat Pembahasan</button>
-    <button onclick="lihatDashboard()">Dashboard</button>
-    <button onclick="logout()">Logout</button>
+  firebase.database().ref("hasilUjian").push({
+    email: user.email,
+    skor: score,
+    total: questionsUjian.length,
+    waktu: new Date().toLocaleString()
+  });
+  // ✅ hapus data agar tidak reuse di ujian berikutnya
+  localStorage.removeItem("soalUjian");
+  //localStorage.removeItem("jawaban");
+  localStorage.removeItem("currentQuestion");
+  halamanHasil = `
+  <div class="container">
+    <div class="main">
+      <div id="quiz">
+        <h1>Hasil Ujian</h1>
+        <p>Email: ${user.email}</p>
+        <h2>Skor: ${score}/${questionsUjian.length} (${persen}%)</h2>
+
+        <button onclick="reviewSoal()">Lihat Pembahasan</button>
+        <button onclick="lihatDashboard()">Dashboard</button>
+        <button onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </div>
+`;
+
+document.body.innerHTML = halamanHasil;
+
+// ✅ simpan hanya 1x
+if (user) {
+  localStorage.setItem("halamanHasil_" + user.uid, halamanHasil);
+}
+  setTimeout(() => {
+    window.scrollTo(0, 0);
+  }, 50);
+
+  // ✅ SIMPAN KE LOCALSTORAGE
+  localStorage.setItem("halamanHasil", halamanHasil);
+}
+  // =========== FUNGSI REVIEW SOAL =========================
+  function reviewSoal() {
+    let salahList = userAnswers.filter((ans, i) => {
+  return ans !== questionsUjian[i].jawaban;
+});
+
+    let html = `
+    <h2>Review Soal Salah</h2>
+    <p>Total soal salah: ${salahList.length}</p>
   `;
+  // ✅ LOAD JAWABAN
+  let savedJawaban = JSON.parse(localStorage.getItem("jawabanReview"));
+  if (savedJawaban) {
+    userAnswers = savedJawaban;
+  }
+  // ✅ LOAD SOAL
+  let savedSoal = JSON.parse(localStorage.getItem("soalReview"));
+  
+
+if (savedSoal) {
+  questionsUjian = savedSoal;
 }
 
-// =========== FUNGSI REVIEW SOAL =========================
-function reviewSoal() {
-  let html = `
-    <h2>Review Soal</h2>
-  `;
-
+    
   questionsUjian.forEach((q, i) => {
     let user = userAnswers[i];
     let benar = q.jawaban;
 
-    html += `
+  // ✅ SKIP kalau benar
+    if (user === benar) return;
+
+
+      html += `
       <div class="review-box">
         <h4>Soal ${i + 1}</h4>
         <p>${q.soal}</p>
     `;
 
-    // ✅ tampilkan semua pilihan
-    q.pilihan.forEach((p) => {
-      let style = "";
+      // ✅ tampilkan semua pilihan
+      q.pilihan.forEach((p) => {
+        let style = "";
 
-      // ✅ jika jawaban benar
-      if (p === benar) {
-        style = "background: green; color: white;";
-      }
+        // ✅ jika jawaban benar
+        if (p === benar) {
+          style = "background: green; color: white;";
+        }
 
-      // ✅ jika jawaban user salah
-      if (p === user && p !== benar) {
-        style = "background: red; color: white;";
-      }
+        // ✅ jika jawaban user salah
+        if (p === user && p !== benar) {
+          style = "background: red; color: white;";
+        }
 
-      html += `
+        html += `
         <div class="opsi" style="${style}">
           ${p}
         </div>
       `;
-    });
+      });
 
-    html += `
+      html += `
         <p><b>Jawaban Anda:</b> ${user ? user : "-"}</p>
         <p><b>Jawaban Benar:</b> ${benar}</p>
 
@@ -309,35 +440,35 @@ function reviewSoal() {
         </p>
       </div>
     `;
-  });
-
-  html += `<button onclick="location.reload()">Kembali</button>`;
-
-  document.body.innerHTML = html;
-}
-
-// ====================== FUNGSI DASHBOARD ======================
-
-function lihatDashboard() {
-  firebase.database().ref("hasilUjian").on("value", snapshot => {
-
-    let data = snapshot.val();
-
-    if (!data) {
-      document.body.innerHTML = "<h2>Belum ada data</h2>";
-      return;
-    }
-
-    let arr = Object.values(data);
-
-    // ✅ urutkan ranking
-    arr.sort((a, b) => {
-      if (b.skor !== a.skor) return b.skor - a.skor;
-      return new Date(a.waktu) - new Date(b.waktu);
     });
 
-    
-    let html = `
+    html += `<button onclick="kembaliKeHasil()">Kembali ke Hasil</button>`;
+
+    document.body.innerHTML = html;
+  }
+
+  // ====================== FUNGSI DASHBOARD ======================
+
+  function lihatDashboard() {
+    firebase.database().ref("hasilUjian").on("value", snapshot => {
+
+      let data = snapshot.val();
+
+      if (!data) {
+        document.body.innerHTML = "<h2>Belum ada data</h2>";
+        return;
+      }
+
+      let arr = Object.values(data);
+
+      // ✅ urutkan ranking
+      arr.sort((a, b) => {
+        if (b.skor !== a.skor) return b.skor - a.skor;
+        return new Date(a.waktu) - new Date(b.waktu);
+      });
+
+
+      let html = `
       <h2>🏆 Dashboard Hasil Ujian</h2>
       <p>Ranking Terbaik Peserta</p>
       <table border="1" cellpadding="10">
@@ -352,32 +483,32 @@ function lihatDashboard() {
     `;
 
 
-    let currentUser = firebase.auth().currentUser;
+      let currentUser = firebase.auth().currentUser;
 
-arr.forEach((d, i) => {
-  let salah = d.total - d.skor;
+      arr.forEach((d, i) => {
+        let salah = d.total - d.skor;
 
-  let kelas = "";
-  let medal = "";
+        let kelas = "";
+        let medal = "";
 
-  // ✅ TOP 3
-  if (i === 0) {
-    kelas = "rank1";
-    medal = "🥇";
-  } else if (i === 1) {
-    kelas = "rank2";
-    medal = "🥈";
-  } else if (i === 2) {
-    kelas = "rank3";
-    medal = "🥉";
-  }
+        // ✅ TOP 3
+        if (i === 0) {
+          kelas = "rank1";
+          medal = "🥇";
+        } else if (i === 1) {
+          kelas = "rank2";
+          medal = "🥈";
+        } else if (i === 2) {
+          kelas = "rank3";
+          medal = "🥉";
+        }
 
-  // ✅ HIGHLIGHT USER SENDIRI
-  if (d.email === currentUser.email) {
-    kelas += " myRank";
-  }
+        // ✅ HIGHLIGHT USER SENDIRI
+        if (d.email === currentUser.email) {
+          kelas += " myRank";
+        }
 
-  html += `
+        html += `
     <tr class="${kelas}">
       <td>${medal} ${i + 1}</td>
       <td>${d.email}</td>
@@ -389,14 +520,17 @@ arr.forEach((d, i) => {
   `;
 });
 
-
-    html += `
+      html += `
       </table>
       <br>
-      <button onclick="location.reload()">Kembali</button>
-    `;
+      <button onclick="kembaliKeHasil()">Kembali ke Hasil</button>
+      `;
+    
+    let app = document.querySelector(".main");
 
-    document.body.innerHTML = html;
+if (app) {
+  app.innerHTML = html;
+}
   });
 }
 
@@ -416,7 +550,6 @@ function updateProgress() {
   if (bar) {
     bar.style.width = percent + "%";
 
-    // ✅ HARUS DI DALAM if(bar)
     if (percent < 50) {
       bar.style.background = "red";
     } else if (percent < 80) {
@@ -427,7 +560,7 @@ function updateProgress() {
   }
 
   if (text) {
-    text.innerText = `Progress: ${percent}% (${answered}/${questionsUjian.length})`;
+    text.innerText = `Progress: ${ percent }% (${ answered }/${questionsUjian.length})`;
   }
 }
 
@@ -450,22 +583,30 @@ function scrollToActive() {
 }
 
 
+// ============= FUNGSI KEMBALI KE HASIL ===================
+
+
+
+function kembaliKeHasil() {
+  let savedHasil = localStorage.getItem("halamanHasil_" + firebase.auth().currentUser.uid);
+
+  if (savedHasil) {
+    halamanHasil = savedHasil;
+    document.body.innerHTML = halamanHasil;
+  }
+}
+
+
 //================= LOG OUT ================
 
 function logout() {
+  let user = firebase.auth().currentUser;
+
+  if (user) {
+    localStorage.removeItem("halamanHasil_" + user.uid);
+  }
+
   firebase.auth().signOut().then(() => {
     window.location.href = "login.html";
   });
 }
-
-// ============ DEBUG CEPAT =============
-
-window.addEventListener("DOMContentLoaded", function () {
-  console.log(localStorage.getItem("namaPeserta"));
-  console.log("nav:", document.getElementById("nav"));
-  console.log("sidebar:", document.getElementById("sidebar"));
-  console.log("quiz:", document.getElementById("quiz"));
-  console.log("questionsUjian:",questionsUjian);
-  displayQuestion();
-  startTimer();
-});
